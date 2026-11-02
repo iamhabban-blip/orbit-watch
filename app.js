@@ -125,13 +125,13 @@ function analyse(data) {
     }
     if (!ground && age < STALE_SEC * 2) {
       const o = detectOrbit(pts);
-      if (o && o.kind === 'orbit') {
+      if (o && o.kind === 'orbit' && o.minutes >= 10) {
         a.orbit = o;
         const hi = ['tanker', 'isr', 'uav'].includes(role);
         a.flags.push({k: 'orbit', label: `Orbiting ${fmtDur(o.minutes)}`,
           text: `Flying a racetrack or orbit about ${Math.round(o.radius)} km across${o.alt ? ` at ${fmtAlt(o.alt)}` : ''} for ${fmtDur(o.minutes)} (${o.laps.toFixed(1)} laps seen).${hi ? ' Typical of a tanker track or surveillance station.' : ''}`,
           s: hi ? 60 : 35});
-      } else if (o && o.kind === 'circuits') {
+      } else if (o && o.kind === 'circuits' && o.minutes >= 10) {
         a.orbit = o;
         a.flags.push({k: 'circuits', label: 'Circuits', text: `Low, tight loops for ${fmtDur(o.minutes)}: most likely training circuits around an airfield.`, s: 8});
       }
@@ -150,8 +150,9 @@ function analyse(data) {
     }
   }
   for (const a of list) {
-    if (['bomber', 'isr', 'tanker', 'uav', 'vip'].includes(a.role) && !a.ground && !a.lost && !a.flags.length) {
-      a.flags.push({k: 'type', label: 'High-interest type', text: `${ROLES[a.role].label} aircraft airborne.`, s: 20 + ROLES[a.role].w / 5});
+    const vipCall = a.role === 'vip' && /^(SAM|EXEC)\d/.test((a.rec.c || '').toUpperCase());
+    if ((['bomber', 'isr', 'tanker', 'uav'].includes(a.role) || vipCall) && !a.ground && !a.lost && !a.flags.length) {
+      a.flags.push({k: 'type', label: vipCall ? 'VIP callsign' : 'High-interest type', text: vipCall ? 'Flying under a VIP or government-transport callsign.' : `${ROLES[a.role].label} aircraft airborne.`, s: 20 + ROLES[a.role].w / 5});
     }
     a.score += a.flags.reduce((m, f) => Math.max(m, f.s), 0);
     a.flagged = a.flags.some(f => f.k !== 'circuits');
@@ -169,10 +170,11 @@ function fmtUTC(ts) { return new Date(ts * 1000).toISOString().slice(11, 16) + '
 
 // ---------- Map ----------
 const map = L.map('map', {zoomControl: true, worldCopyJump: true, minZoom: 2}).fitBounds(REGIONS.global);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  subdomains: 'abcd', maxZoom: 12,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a> · data: adsb.lol / adsb.fi / airplanes.live',
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/';
+L.tileLayer(ESRI + 'World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 16, attribution: 'Basemap &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors · data: adsb.lol / adsb.fi / airplanes.live',
 }).addTo(map);
+L.tileLayer(ESRI + 'World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {maxZoom: 16, opacity: .7}).addTo(map);
 state.orbitRings.addTo(map);
 state.lines.addTo(map);
 
