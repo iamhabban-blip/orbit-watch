@@ -125,15 +125,20 @@ function analyse(data) {
     }
     if (!ground && age < STALE_SEC * 2) {
       const o = detectOrbit(pts);
-      if (o && o.kind === 'orbit' && o.minutes >= 10) {
+      if (o && o.minutes >= 10) {
+        const combat = ['tanker', 'isr', 'uav', 'bomber', 'fighter'].includes(role);
+        const lowOrTraining = o.kind === 'circuits' || role === 'trainer' || role === 'heli' || (!combat && (o.alt ?? 0) < 20000);
         a.orbit = o;
-        const hi = ['tanker', 'isr', 'uav'].includes(role);
-        a.flags.push({k: 'orbit', label: `Orbiting ${fmtDur(o.minutes)}`,
-          text: `Flying a racetrack or orbit about ${Math.round(o.radius)} km across${o.alt ? ` at ${fmtAlt(o.alt)}` : ''} for ${fmtDur(o.minutes)} (${o.laps.toFixed(1)} laps seen).${hi ? ' Typical of a tanker track or surveillance station.' : ''}`,
-          s: hi ? 60 : 35});
-      } else if (o && o.kind === 'circuits' && o.minutes >= 10) {
-        a.orbit = o;
-        a.flags.push({k: 'circuits', label: 'Circuits', text: `Low, tight loops for ${fmtDur(o.minutes)}: most likely training circuits around an airfield.`, s: 8});
+        if (lowOrTraining) {
+          o.kind = 'circuits';
+          a.flags.push({k: 'circuits', label: role === 'trainer' ? 'Training loops' : 'Pattern work',
+            text: `Repeated loops${o.alt ? ` around ${fmtAlt(o.alt)}` : ''} for ${fmtDur(o.minutes)}: typical of training, approach practice or holding, so not flagged.`, s: 8});
+        } else {
+          const hi = ['tanker', 'isr', 'uav'].includes(role);
+          a.flags.push({k: 'orbit', label: `Orbiting ${fmtDur(o.minutes)}`,
+            text: `Flying a racetrack or orbit about ${Math.round(o.radius)} km across${o.alt ? ` at ${fmtAlt(o.alt)}` : ''} for ${fmtDur(o.minutes)} (${o.laps.toFixed(1)} laps seen).${hi ? ' Typical of a tanker track or surveillance station.' : ''}`,
+            s: hi ? 60 : 35});
+        }
       }
     }
     list.push(a);
