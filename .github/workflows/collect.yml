@@ -2,7 +2,7 @@ name: Collect flight data and deploy
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # GitHub runs this every 5-15 minutes in practice
+    - cron: "4,19,34,49 * * * *"   # every 15 min, off the busy top-of-hour slot; GitHub may still delay runs
   workflow_dispatch:
   push:
     branches: [main]
