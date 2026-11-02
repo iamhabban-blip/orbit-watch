@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Orbit Watch</title>
+<meta name="description" content="Military air activity from public ADS-B: tankers, ISR orbits, refuelling, emergency squawks. Pattern detection on live community flight data.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="bar">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="3 3"/><path d="M16 7l4 10-4-2-4 2z" fill="var(--amber)"/></svg>
+    <div>
+      <h1>Orbit Watch</h1>
+      <p class="tag">Military air activity from public ADS-B</p>
+    </div>
+  </div>
+  <div class="status" id="status" role="status"><span class="dot"></span><span id="status-text">Loading flight data…</span></div>
+  <div class="bar-actions">
+    <button type="button" class="btn" id="fit-flagged" title="Zoom to flagged aircraft">Zoom to flagged</button>
+    <button type="button" class="btn" id="csv">Export CSV</button>
+  </div>
+</header>
+
+<div class="app">
+  <aside class="side" aria-label="Filters and aircraft">
+    <div class="stats" id="stats"></div>
+
+    <div class="ctl-row">
+      <label class="field">
+        <span>Region</span>
+        <select id="region">
+          <option value="global">Global</option>
+          <option value="europe">Europe</option>
+          <option value="blacksea">Black Sea</option>
+          <option value="mideast">Middle East</option>
+          <option value="namerica">North America</option>
+          <option value="pacific">East Asia &amp; Pacific</option>
+        </select>
+      </label>
+      <label class="field grow">
+        <span>Search</span>
+        <input id="search" type="search" placeholder="Callsign, type, reg or hex" autocomplete="off">
+      </label>
+    </div>
+
+    <div class="roles" id="roles" role="group" aria-label="Filter by role"></div>
+
+    <div class="toggles">
+      <label><input type="checkbox" id="only-view"> Only what's on the map</label>
+      <label><input type="checkbox" id="show-ground"> Show aircraft on the ground</label>
+      <label><input type="checkbox" id="show-lost"> Show lost contacts (&gt;30 min)</label>
+      <label class="sel">Trails
+        <select id="trails"><option value="flagged">Flagged</option><option value="all">All</option><option value="none">None</option></select>
+      </label>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-flagged" aria-selected="true">Flagged <span class="n" id="n-flagged">0</span></button>
+      <button type="button" role="tab" id="tab-all" aria-selected="false">All aircraft <span class="n" id="n-all">0</span></button>
+    </div>
+    <ul class="list" id="list" aria-live="polite"></ul>
+
+    <p class="fine">Uses only data that aircraft broadcast publicly, collected by community receivers (adsb.lol, adsb.fi, airplanes.live). Positions refresh every 5–15 minutes and are not real time. Roles are inferred from type codes and callsigns. Many military aircraft never broadcast, so absence of data means nothing.</p>
+  </aside>
+
+  <main class="mapwrap">
+    <div id="map" aria-label="Map of tracked military aircraft"></div>
+    <section class="detail" id="detail" hidden aria-label="Aircraft details"></section>
+    <div class="legend" id="legend" aria-hidden="true"></div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
