@@ -188,6 +188,15 @@ def main():
         src = os.path.join(root, f)
         if os.path.exists(src):
             shutil.copy2(src, os.path.join(out, f))
+    # Cache-bust the page's own assets so browsers pick up code changes on the next load.
+    page = os.path.join(out, "index.html")
+    if os.path.exists(page):
+        v = int(time.time())
+        with open(page, encoding="utf-8") as fh:
+            html = fh.read()
+        html = html.replace('href="style.css"', f'href="style.css?v={v}"').replace('src="app.js"', f'src="app.js?v={v}"')
+        with open(page, "w", encoding="utf-8") as fh:
+            fh.write(html)
     with open(os.path.join(out, "data", "history.json"), "w", encoding="utf-8") as fh:
         json.dump(history, fh, separators=(",", ":"))
     n = len(history.get("aircraft", {}))
