@@ -1,0 +1,38 @@
+name: Collect flight data and deploy
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # GitHub runs this every 5-15 minutes in practice
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  collect-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Collect positions (8 samples, 30 s apart)
+        run: python scripts/collect.py --out site --samples 8 --interval 30
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
