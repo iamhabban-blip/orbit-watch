@@ -34,5 +34,15 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+      # deploy-pages sometimes can't see the artifact that was just uploaded
+      # ("No artifacts named github-pages were found"). It's a GitHub-side
+      # timing glitch, so wait and try once more before failing the run.
       - id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+      - name: Wait before retrying deploy
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 45
+      - id: deployment_retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
